@@ -1,0 +1,38 @@
+import socket
+import smbus
+import time
+
+# Server IP address and port
+server_ip = '192.168.4.208'  # Replace with the IP address of the sender Raspberry Pi
+server_port = 5000
+
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+client_socket.connect((server_ip, server_port))
+
+
+received_data = client_socket.recv(1024).decode()
+print('Received data:', received_data)
+
+# Close the connection
+client_socket.close()
+
+# I2C address of Arduino slave
+arduino_address = 0x8
+
+# Open I2C bus
+bus = smbus.SMBus(1)
+
+# Send a character to the Arduino to trigger the SMS sending
+def send_sms():
+    bus.write_byte(arduino_address, ord('S'))
+    time.sleep(2)  # Wait for the Arduino to process the SMS sending
+
+# Main program
+if __name__ == '__main__':
+    try:
+        if received_data == 'Signal received':
+            send_sms()
+            print("SMS sent successfully!")
+    except Exception as e:
+        print("Error occurred while sending SMS:", str(e))
